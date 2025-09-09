@@ -79,6 +79,8 @@ struct vfsmount {
  	ANDROID_KABI_RESERVE(4);
 #endif
 
+	ANDROID_KABI_RESERVE(4);
+#endif
 	void *data;
 } __randomize_layout;
 
