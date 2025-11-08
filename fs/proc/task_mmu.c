@@ -936,7 +936,18 @@ static void show_smap_vma(struct seq_file *m, void *v)
 
 	memset(&mss, 0, sizeof(mss));
 
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+	if (vma->vm_file &&
+		unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
+		susfs_is_current_proc_umounted())
+	{
+		goto bypass_orig_flow;
+	}
+#endif
 	smap_gather_stats(vma, &mss);
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+bypass_orig_flow:
+#endif
 
 	show_map_vma(m, vma);
 	if (vma_get_anon_name(vma)) {
