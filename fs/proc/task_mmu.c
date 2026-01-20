@@ -2281,3 +2281,4 @@ const struct file_operations proc_pid_numa_maps_operations = {
 };
 
 #endif /* CONFIG_NUMA */
+#endif /* CONFIG_PROC_PAGE_MONITOR */
