@@ -461,7 +461,6 @@ done:
 
 static int show_map(struct seq_file *m, void *v)
 {
-	struct vm_area_struct *pad_vma = get_pad_vma(v);
 	struct vm_area_struct *vma = get_data_vma(v);
 
 	if (vma_pages(vma))
@@ -984,6 +983,9 @@ static int show_smap(struct seq_file *m, void *v)
 		unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
 		susfs_is_current_proc_umounted())
 	{
+		struct mem_size_stats mss;
+		memset(&mss, 0, sizeof(mss));
+		smap_gather_stats(vma, &mss);
 		show_map_vma(m, vma);
 		SEQ_PUT_DEC("Size:           ", vma->vm_end - vma->vm_start);
 		SEQ_PUT_DEC(" kB\nKernelPageSize: ", vma_kernel_pagesize(vma));
@@ -997,7 +999,6 @@ static int show_smap(struct seq_file *m, void *v)
 		seq_putc(m, '\n');
 		return 0;
 	}
-#endif
 
 	show_map_pad_vma(vma, NULL, m, show_smap_vma, true);
 	m_cache_vma(m, v);
