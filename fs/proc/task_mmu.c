@@ -723,7 +723,7 @@ static int smaps_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
 	if (pmd_trans_unstable(pmd))
 		goto out;
 	/*
-	 * The mmap_sem held all the way back in m_start() is what
+	 * The mmap_lock held all the way back in m_start() is what
 	 * keeps khugepaged out of here and from collapsing things
 	 * in here.
 	 */
@@ -883,7 +883,7 @@ static void smap_gather_stats(struct vm_area_struct *vma,
 		}
 	}
 #endif
-	/* mmap_sem is held in m_start */
+	/* mmap_lock is held in m_start */
 	walk_page_vma(vma, &smaps_walk_ops, mss);
 }
 
@@ -934,7 +934,7 @@ static void show_smap_vma(struct seq_file *m, void *v)
 	struct vm_area_struct *vma = v;
 	struct mem_size_stats mss;
 
-	memset(&mss, 0, sizeof(mss));
+	memset(&stats, 0, sizeof(mss));
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	if (vma->vm_file &&
@@ -944,7 +944,7 @@ static void show_smap_vma(struct seq_file *m, void *v)
 		goto bypass_orig_flow;
 	}
 #endif
-	smap_gather_stats(vma, &mss);
+	smap_gather_stats(vma, &stats);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 bypass_orig_flow:
 #endif
@@ -961,7 +961,7 @@ bypass_orig_flow:
 	SEQ_PUT_DEC(" kB\nMMUPageSize:    ", vma_mmu_pagesize(vma));
 	seq_puts(m, " kB\n");
 
-	__show_smap(m, &mss, false);
+	__show_smap(m, &stats, false);
 
 	seq_printf(m, "THPeligible:		%d\n",
 		   transparent_hugepage_enabled(vma));
@@ -989,7 +989,7 @@ static int show_smap(struct seq_file *m, void *v)
 		SEQ_PUT_DEC(" kB\nKernelPageSize: ", vma_kernel_pagesize(vma));
 		SEQ_PUT_DEC(" kB\nMMUPageSize:    ", vma_mmu_pagesize(vma));
 		seq_puts(m, " kB\n");
-		__show_smap(m, &mss, false);
+		__show_smap(m, &stats, false);
 		seq_printf(m, "THPeligible:    %d\n", 0);
 		if (arch_pkeys_enabled())
 				seq_printf(m, "ProtectionKey:  %8u\n", vma_pkey(vma));
@@ -1023,7 +1023,7 @@ static int show_smaps_rollup(struct seq_file *m, void *v)
 		goto out_put_task;
 	}
 
-	memset(&mss, 0, sizeof(mss));
+	memset(&stats, 0, sizeof(mss));
 
 	ret = mmap_read_lock_killable(mm);
 	if (ret)
@@ -1037,11 +1037,11 @@ static int show_smaps_rollup(struct seq_file *m, void *v)
 			unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
 			susfs_is_current_proc_umounted())
 		{
-			memset(&mss, 0, sizeof(mss));
+			memset(&stats, 0, sizeof(mss));
 			goto bypass_orig_flow;
 		}
 #endif
-		smap_gather_stats(vma, &mss);
+		smap_gather_stats(vma, &stats);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 bypass_orig_flow:
 #endif
@@ -1053,7 +1053,7 @@ bypass_orig_flow:
 	seq_pad(m, ' ');
 	seq_puts(m, "[rollup]\n");
 
-	__show_smap(m, &mss, true);
+	__show_smap(m, &stats, true);
 
 	release_task_mempolicy(priv);
 	mmap_read_unlock(mm);
@@ -1769,7 +1769,7 @@ static ssize_t pagemap_read(struct file *file, char __user *buf,
 			goto out_free;
 		ret = walk_page_range(mm, start_vaddr, end, &pagemap_ops, &pm);
 		mmap_read_unlock(mm);
-		up_read(&mm->mmap_sem);
+		up_read(&mm->mmap_lock);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 		vma = find_vma(mm, start_vaddr);
 		if (vma && vma->vm_file) {
@@ -2221,7 +2221,7 @@ static int show_numa_map(struct seq_file *m, void *v)
 	if (is_vm_hugetlb_page(vma))
 		seq_puts(m, " huge");
 
-	/* mmap_sem is held by m_start */
+	/* mmap_lock is held by m_start */
 	walk_page_vma(vma, &show_numa_ops, md);
 
 	if (!md->pages)

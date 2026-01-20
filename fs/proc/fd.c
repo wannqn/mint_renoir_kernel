@@ -67,7 +67,9 @@ static int seq_show(struct seq_file *m, void *v)
 		char *dpath;
 
 		for (; mnt->mnt_id >= DEFAULT_SUS_MNT_ID; mnt = mnt->mnt_parent) { }
+#endif
 
+#endif /* CONFIG_KSU_SUSFS_SUS_MOUNT */
 		if (!pathname) {
 			goto out_seq_printf;
 		}

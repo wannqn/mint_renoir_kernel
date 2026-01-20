@@ -795,7 +795,10 @@ struct wake_q_node {
 	struct wake_q_node *next;
 };
 
+#define TASK_STRUCT_NON_ROOT_USER_APP_PROC 0x00010000
+#define DEFAULT_SUS_MNT_ID 1000000
 struct task_struct {
+	u32 susfs_task_state;
 #ifdef CONFIG_THREAD_INFO_IN_TASK
 	/*
 	 * For reasons of header soup (see current_thread_info()), this
