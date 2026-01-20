@@ -1905,9 +1905,9 @@ static inline bool may_mandlock(void)
 	return false;
 }
 #endif
-
 static int can_umount(const struct path *path, int flags)
 {
+
 	struct mount *mnt = real_mount(path->mnt);
 
 	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
@@ -1953,10 +1953,6 @@ static int can_umount(const struct path *path, int flags)
  */
 static inline bool path_mounted(const struct path *path)
 {
-	return path->mnt->mnt_root == path->dentry;
-}
-	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
-		return -EPERM;
 	return 0;
 }
 // caller is responsible for flags being sane

@@ -467,7 +467,7 @@ static int show_map(struct seq_file *m, void *v)
 	if (vma_pages(vma))
 		show_map_vma(m, vma);
 
-	show_map_pad_vma(vma, pad_vma, m, show_map_vma, false);
+	show_map_pad_vma(vma, NULL, m, show_map_vma, false);
 
 	m_cache_vma(m, v);
 	return 0;
@@ -934,7 +934,7 @@ static void show_smap_vma(struct seq_file *m, void *v)
 	struct vm_area_struct *vma = v;
 	struct mem_size_stats mss;
 
-	memset(&stats, 0, sizeof(mss));
+	memset(&mss, 0, sizeof(mss));
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	if (vma->vm_file &&
@@ -944,7 +944,7 @@ static void show_smap_vma(struct seq_file *m, void *v)
 		goto bypass_orig_flow;
 	}
 #endif
-	smap_gather_stats(vma, &stats);
+	smap_gather_stats(vma, &mss);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 bypass_orig_flow:
 #endif
@@ -961,7 +961,7 @@ bypass_orig_flow:
 	SEQ_PUT_DEC(" kB\nMMUPageSize:    ", vma_mmu_pagesize(vma));
 	seq_puts(m, " kB\n");
 
-	__show_smap(m, &stats, false);
+	__show_smap(m, &mss, false);
 
 	seq_printf(m, "THPeligible:		%d\n",
 		   transparent_hugepage_enabled(vma));
@@ -978,7 +978,7 @@ static int show_smap(struct seq_file *m, void *v)
 
 	if (vma_pages(vma))
 		show_smap_vma(m, vma);
-	show_map_pad_vma(vma, pad_vma, m, show_smap_vma, true);
+	show_map_pad_vma(vma, NULL, m, show_smap_vma, true);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	if (vma->vm_file &&
 		unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
@@ -989,7 +989,7 @@ static int show_smap(struct seq_file *m, void *v)
 		SEQ_PUT_DEC(" kB\nKernelPageSize: ", vma_kernel_pagesize(vma));
 		SEQ_PUT_DEC(" kB\nMMUPageSize:    ", vma_mmu_pagesize(vma));
 		seq_puts(m, " kB\n");
-		__show_smap(m, &stats, false);
+		__show_smap(m, &mss, false);
 		seq_printf(m, "THPeligible:    %d\n", 0);
 		if (arch_pkeys_enabled())
 				seq_printf(m, "ProtectionKey:  %8u\n", vma_pkey(vma));
@@ -999,7 +999,7 @@ static int show_smap(struct seq_file *m, void *v)
 	}
 #endif
 
-	show_map_pad_vma(vma, m, show_smap_vma, true);
+	show_map_pad_vma(vma, NULL, m, show_smap_vma, true);
 	m_cache_vma(m, v);
 	return 0;
 }
@@ -1023,7 +1023,7 @@ static int show_smaps_rollup(struct seq_file *m, void *v)
 		goto out_put_task;
 	}
 
-	memset(&stats, 0, sizeof(mss));
+	memset(&mss, 0, sizeof(mss));
 
 	ret = mmap_read_lock_killable(mm);
 	if (ret)
@@ -1037,11 +1037,11 @@ static int show_smaps_rollup(struct seq_file *m, void *v)
 			unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
 			susfs_is_current_proc_umounted())
 		{
-			memset(&stats, 0, sizeof(mss));
+			memset(&mss, 0, sizeof(mss));
 			goto bypass_orig_flow;
 		}
 #endif
-		smap_gather_stats(vma, &stats);
+		smap_gather_stats(vma, &mss);
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 bypass_orig_flow:
 #endif
@@ -1053,7 +1053,7 @@ bypass_orig_flow:
 	seq_pad(m, ' ');
 	seq_puts(m, "[rollup]\n");
 
-	__show_smap(m, &stats, true);
+	__show_smap(m, &mss, true);
 
 	release_task_mempolicy(priv);
 	mmap_read_unlock(mm);
