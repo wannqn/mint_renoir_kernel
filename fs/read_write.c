@@ -446,6 +446,11 @@ EXPORT_SYMBOL_NS(kernel_read, ANDROID_GKI_VFS_EXPORT_ONLY);
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
+	// --- KSU HOOK START ---
+    extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
+            size_t *count_ptr, loff_t **pos_ptr);
+    ksu_handle_vfs_read(&file, &buf, &count, &pos);
+    // --- KSU HOOK END ---
 
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;

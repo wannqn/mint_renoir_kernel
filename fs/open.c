@@ -354,6 +354,13 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
 	int res;
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
 
+    // --- НАЧАЛО ВСТАВКИ KSU (COPY-PASTE START) ---
+    extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
+                 int *flags);
+    int flags = 0; // В этой версии ядра нет аргумента flags, создаем свой
+    ksu_handle_faccessat(&dfd, &filename, &mode, &flags);
+    // --- КОНЕЦ ВСТАВКИ KSU (COPY-PASTE END) ---
+
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
 
